@@ -65,11 +65,11 @@ struct mmsghdr {
 #endif
 
 // Those are initialized in the init(...) method and cached for performance reasons
-jfieldID packetAddrFieldId = NULL;
-jfieldID packetScopeIdFieldId = NULL;
-jfieldID packetPortFieldId = NULL;
-jfieldID packetMemoryAddressFieldId = NULL;
-jfieldID packetCountFieldId = NULL;
+static jfieldID packetAddrFieldId = NULL;
+static jfieldID packetScopeIdFieldId = NULL;
+static jfieldID packetPortFieldId = NULL;
+static jfieldID packetMemoryAddressFieldId = NULL;
+static jfieldID packetCountFieldId = NULL;
 
 // util methods
 static int getSysctlValue(const char * property, int* returnValue) {
@@ -505,7 +505,7 @@ static void netty_epoll_native_JNI_OnUnLoad(JNIEnv* env) {
 }
 
 // Invoked by the JVM when statically linked
-jint JNI_OnLoad_netty_transport_native_epoll(JavaVM* vm, void* reserved) {
+static jint JNI_OnLoad_netty_transport_native_epoll0(JavaVM* vm, void* reserved) {
     JNIEnv* env;
     if ((*vm)->GetEnv(vm, (void**) &env, NETTY_JNI_VERSION) != JNI_OK) {
         return JNI_ERR;
@@ -536,14 +536,7 @@ jint JNI_OnLoad_netty_transport_native_epoll(JavaVM* vm, void* reserved) {
     return ret;
 }
 
-#ifndef NETTY_BUILD_STATIC
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
-    return JNI_OnLoad_netty_transport_native_epoll(vm, reserved);
-}
-#endif /* NETTY_BUILD_STATIC */
-
-// Invoked by the JVM when statically linked
-void JNI_OnUnload_netty_transport_native_epoll(JavaVM* vm, void* reserved) {
+static void JNI_OnUnload_netty_transport_native_epoll0(JavaVM* vm, void* reserved) {
     JNIEnv* env;
     if ((*vm)->GetEnv(vm, (void**) &env, NETTY_JNI_VERSION) != JNI_OK) {
         // Something is wrong but nothing we can do about this :(
@@ -552,8 +545,25 @@ void JNI_OnUnload_netty_transport_native_epoll(JavaVM* vm, void* reserved) {
     netty_epoll_native_JNI_OnUnLoad(env);
 }
 
+// As we build with -fvisibility=hidden we need to ensure we mark the entry load and unload functions used by the
+// JVM as visible.
+
+// Invoked by the JVM when statically linked
+jint __attribute__((visibility("default"))) JNI_OnLoad_netty_transport_native_epoll(JavaVM* vm, void* reserved) {
+    return JNI_OnLoad_netty_transport_native_epoll0(vm, reserved);
+}
+
+// Invoked by the JVM when statically linked
+void __attribute__((visibility("default"))) JNI_OnUnload_netty_transport_native_epoll(JavaVM* vm, void* reserved) {
+    JNI_OnUnload_netty_transport_native_epoll0(vm, reserved);
+}
+
 #ifndef NETTY_BUILD_STATIC
-JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
-  JNI_OnUnload_netty_transport_native_epoll(vm, reserved);
+jint JNIEXPORT __attribute__((visibility("default"))) JNI_OnLoad(JavaVM* vm, void* reserved) {
+    return JNI_OnLoad_netty_transport_native_epoll0(vm, reserved);
+}
+
+JNIEXPORT void JNIEXPORT __attribute__((visibility("default"))) JNI_OnUnload(JavaVM* vm, void* reserved) {
+    JNI_OnUnload_netty_transport_native_epoll0(vm, reserved);
 }
 #endif /* NETTY_BUILD_STATIC */
