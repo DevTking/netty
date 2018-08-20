@@ -359,25 +359,25 @@ static void JNI_OnUnload_netty_transport_native_kqueue0(JavaVM* vm, void* reserv
     netty_kqueue_native_JNI_OnUnLoad(env);
 }
 
-// As we build with -fvisibility=hidden we need to ensure we mark the entry load and unload functions used by the
-// JVM as visible.
+// We build with -fvisibility=hidden so ensure we mark everything that needs to be visible with JNIEXPORT
+// http://mail.openjdk.java.net/pipermail/core-libs-dev/2013-February/014549.html
 
 // Invoked by the JVM when statically linked
-jint __attribute__((visibility("default"))) JNI_OnLoad_netty_transport_native_kqueue(JavaVM* vm, void* reserved) {
+JNIEXPORT jint JNI_OnLoad_netty_transport_native_kqueue(JavaVM* vm, void* reserved) {
     return JNI_OnLoad_netty_transport_native_kqueue0(vm, reserved);
 }
 
 // Invoked by the JVM when statically linked
-void __attribute__((visibility("default"))) JNI_OnUnload_netty_transport_native_kqueue(JavaVM* vm, void* reserved) {
+JNIEXPORT void JNI_OnUnload_netty_transport_native_kqueue(JavaVM* vm, void* reserved) {
     JNI_OnUnload_netty_transport_native_kqueue0(vm, reserved);
 }
 
 #ifndef NETTY_BUILD_STATIC
-JNIEXPORT jint __attribute__((visibility("default"))) JNI_OnLoad(JavaVM* vm, void* reserved) {
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     return JNI_OnLoad_netty_transport_native_kqueue0(vm, reserved);
 }
 
-JNIEXPORT void __attribute__((visibility("default"))) JNI_OnUnload(JavaVM* vm, void* reserved) {
+JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
     return JNI_OnUnload_netty_transport_native_kqueue0(vm, reserved);
 }
 #endif /* NETTY_BUILD_STATIC */
